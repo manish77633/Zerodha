@@ -62,7 +62,7 @@ function Universe() {
                 </div>
 
                 {/* CTA Button */}
-                <div className="flex justify-center mt-8 md:mt-8">
+                <div className="flex justify-center mt-8 md:mt-8f">
                     <button className="bg-[#387ed1] hover:bg-gray-900 text-white text-xl px-12 py-3 rounded-sm font-medium transition-all shadow-md active:scale-95">
                         Sign up for free
                     </button>
