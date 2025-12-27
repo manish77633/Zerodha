@@ -1,0 +1,1 @@
+export default function Menu() { return <h1 className="text-2xl">Your Holdings</h1>; }

@@ -1,0 +1,1 @@
+export default function Positions() { return <h1 className="text-2xl">Your Holdings</h1>; }

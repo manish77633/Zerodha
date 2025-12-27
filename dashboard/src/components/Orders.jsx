@@ -1,0 +1,1 @@
+export default function Orders() { return <h1 className="text-2xl">Your Orders</h1>; }
