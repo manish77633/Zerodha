@@ -1,10 +1,13 @@
-
+import CreateTickets from "./CreateTickets";
+import Hero from "./Hero";
 
 function SupportPage() {
 	return ( 
 
 		<>
-		<h1>supportpage</h1>
+		
+	<h1>slkjdf</h1>
+
 		</>
 	 );
 }
