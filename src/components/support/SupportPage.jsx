@@ -5,8 +5,9 @@ function SupportPage() {
 	return ( 
 
 		<>
-		
-	<h1>slkjdf</h1>
+	<Hero />	
+	<CreateTickets/>
+	
 
 		</>
 	 );

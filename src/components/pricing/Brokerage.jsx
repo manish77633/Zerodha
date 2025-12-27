@@ -3,7 +3,7 @@ import React from 'react';
 function Brokerage() {
     return (
         <section className="w-full py-12 bg-white">
-            <div className="container mx-auto px-6 lg:px-24 w-[88%] space-y-20">
+            <div className="container mx-auto px-6 lg:px-24 w-[80%] space-y-20">
                 
                 {/* 1. Charges for account opening */}
                 <div className="overflow-x-auto">
