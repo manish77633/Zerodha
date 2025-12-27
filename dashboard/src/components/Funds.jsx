@@ -53,17 +53,17 @@ const Funds = () => {
 							{ label: "Options premium", value: "0.00" },
 						].map((item, index) => (
 							<div key={index} className="flex justify-between py-1.5 border-b border-gray-50">
-								<span className="text-gray-400 text-md ">{item.label}</span>
+								<span className="text-gray-500 text-md ">{item.label}</span>
 								<span className="text-gray-800 text-md font-semibold">{item.value}</span>
 							</div>
 						))}
 
 						<div className="flex justify-between py-1.5 border-t border-gray-200">
-							<span className="text-gray-400  text-md">Collateral (Liquid funds)</span>
+							<span className="text-gray-500   text-md">Collateral (Liquid funds)</span>
 							<span className="text-gray-700 text-md font-semibold">0.00</span>
 						</div>
 						<div className="flex justify-between py-1.5 border-b border-gray-50">
-							<span className="text-gray-400 text-md">Collateral (Equity)</span>
+							<span className="text-gray-500  text-md">Collateral (Equity)</span>
 							<span className="text-gray-700 text-md font-semibold">0.00</span>
 						</div>
 
