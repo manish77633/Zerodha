@@ -18,7 +18,7 @@ function Navbar() {
             <div className="w-[80%]  mx-auto px-4 sm:px-6 lg:px-24">
                 <div className="flex justify-between items-center h-16">
                     {/* Logo Section */}
-                    <div className="flex-shrink-0">
+                    <div className="shrink-0">
                         <Link to="/" className="text-2xl font-bold text-blue-600">
                             <img
                                 src="/media/logo.svg"

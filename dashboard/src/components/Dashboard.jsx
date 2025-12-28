@@ -11,7 +11,7 @@ function Dashboard() {
   return (
     <div className="flex flex-1 mt-14 overflow-hidden">
       {/* Sidebar: Hamesha dikhega */}
-      <div className="w-[450px] flex-shrink-0 border-r border-gray-100 h-full">
+      <div className="w-112.5 shrink-0 border-r border-gray-100 h-full">
         <WatchList />
       </div>
 
