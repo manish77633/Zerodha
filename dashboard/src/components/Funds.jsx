@@ -70,7 +70,7 @@ const Funds = () => {
 						{/* Total Collateral Added */}
 						<div className="flex justify-between py-2 mt-1">
 							<span className="text-gray-500 font-semibold text-md">Total collateral</span>
-							<span className="text-gray-900 font-semibold text-md font-semibold">0.00</span>
+							<span className="text-gray-900 font-semibold text-md ">0.00</span>
 						</div>
 					</div>
 				</div>
