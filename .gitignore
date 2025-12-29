@@ -1,0 +1,9 @@
+# Root level ignore
+node_modules/
+.env
+
+# Sub-folders ignore
+backend/node_modules/
+backend/.env
+frontend/node_modules/
+dashboard/node_modules/
