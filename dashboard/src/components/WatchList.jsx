@@ -70,7 +70,7 @@ const WatchList = () => {
             </li>
           );
         })}
-      </ul>
+      </ul> 
     </div>
   );
 };

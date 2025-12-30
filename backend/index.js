@@ -2,19 +2,25 @@ const express = require('express');
 const mongoose = require('mongoose');
 const { HoldingsModel } = require('./model/HoldingsModel');
 const { PositionsModel } = require('./model/PositionsModel');
+const bodyParser = require('body-parser');
+const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const url = process.env.MONGO_URL;
 
+app.use(bodyParser.json());
+app.use(cors());
+
 // Database Connection - Server start hone se pehle connect karna behtar hai
 mongoose.connect(url)
   .then(() => console.log("Connected to MongoDB Atlas"))
   .catch((err) => console.log("DB Connection Error:", err));
 
+  // ---------------------holdings data--------------------
+  
 // app.get('/addHoldings', async (req, res) => {
-
 //   let tempHoldings = [
 //     { name: "BHARTIARTL", qty: 2, avg: 538.05, price: 541.15, net: "+2.58%", day: "+200.99%" },
 //     { name: "HDFCBANK", qty: 2, avg: 1383.4, price: 1522.35, net: "-10.04%", day: "+0.11%" },
@@ -41,7 +47,49 @@ mongoose.connect(url)
 //   }
 // });
 
+// --------------------position data--------------------
+// app.get('/addPositions', async (req, res) => {
+//   let tempPositoins = [
+//     {
+//       product: "CNC",
+//       name: "EVEREADY",
+//       qty: 2,
+//       avg: 316.27,
+//       price: 312.35,
+//       net: "+0.58%",
+//       day: "-1.24%",
+//       isLoss: true,
+//     },
+//     {
+//       product: "CNC",
+//       name: "JUBLFOOD",
+//       qty: 1,
+//       avg: 3124.75,
+//       price: 3082.65,
+//       net: "+10.04%",
+//       day: "-1.35%",
+//       isLoss: true,
+//     },
+//   ];
+//   try {
+//     await PositionsModel.insertMany(tempPositoins);
+//     res.send('Positions added successfully');
+//   } catch (error) {
+//     console.error("Error saving positions:", error);
+//     res.status(500).send("Error adding data to database");
+//   }
+// });
 
+
+app.get("/allHoldings", async (req, res) => {
+    let allHoldings = await HoldingsModel.find({});
+    res.json(allHoldings);
+});
+
+app.get("/allPositions", async (req, res) => {
+    let allPositions = await PositionsModel.find({});
+    res.json(allPositions);
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
