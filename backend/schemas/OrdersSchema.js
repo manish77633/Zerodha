@@ -5,7 +5,7 @@ const OrdersSchema = new Schema({
 	name: String,
 	qty: Number,
 	price: Number,
-	mode: Boolean,
+	mode: String,
 });
 
 module.exports = OrdersSchema;

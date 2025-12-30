@@ -1,8 +1,19 @@
 import React from "react";
 // Data folder se positions ko import kiya
-import { positions as positionsData } from "../data/data";
+import  { useEffect, useState } from "react";
+
+import axios from "axios";
 
 const Positions = () => {
+
+  const [positionsData, setPositionsData] = useState([]);
+
+  useEffect(() => {
+    axios.get("http://localhost:3000/allPositions").then((res) => {
+      setPositionsData(res.data);
+    }).catch(err => console.log("Axios Error:", err));
+  }, []);
+
   // Total P&L calculate karne ka dynamic logic
   const totalPnL = positionsData.reduce((acc, stock) => {
     const pnl = (Number(stock.price) - Number(stock.avg)) * Number(stock.qty);

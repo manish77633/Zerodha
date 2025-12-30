@@ -15,7 +15,7 @@ function Dashboard() {
     <div className="flex flex-col lg:flex-row mt-14 overflow-hidden h-screen">
       
       {/* Sidebar / Watchlist Section */}
-      <div className="w-full lg:w-[450px] shrink-0 border-b lg:border-b-0 lg:border-r border-gray-100 overflow-y-auto max-h-[50vh] lg:max-h-full">
+      <div className="w-full lg:w-112.5 shrink-0 border-b lg:border-b-0 lg:border-r border-gray-100 overflow-y-auto max-h-[50vh] lg:max-h-full">
         <WatchList />
       </div>
 
