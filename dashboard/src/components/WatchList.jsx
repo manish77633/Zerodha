@@ -3,12 +3,46 @@ import { watchlist as initialWatchlist } from "../data/data";
 import { BarChart2, ChevronDown, ChevronUp, Trash2, MoreHorizontal } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { GeneralContext } from "./GeneralContext";
+import { DoughnutChart } from "./DoughnutChart";
+
+
+
 
 const WatchList = () => {
   const { openBuyWindow } = useContext(GeneralContext); // Hook call
   const [stocks] = useState(initialWatchlist);
 
+ const labels = initialWatchlist.map((subArray) => subArray["name"]);
+ const data = {
+    labels,
+    datasets: [
+      {
+        label: "Price",
+        data: initialWatchlist.map((stock) => stock.price),
+        backgroundColor: [
+          "rgba(255, 99, 132, 0.5)",
+          "rgba(54, 162, 235, 0.5)",
+          "rgba(255, 206, 86, 0.5)",
+          "rgba(75, 192, 192, 0.5)",
+          "rgba(153, 102, 255, 0.5)",
+          "rgba(255, 159, 64, 0.5)",
+        ],
+        borderColor: [
+          "rgba(255, 99, 132, 1)",
+          "rgba(54, 162, 235, 1)",
+          "rgba(255, 206, 86, 1)",
+          "rgba(75, 192, 192, 1)",
+          "rgba(153, 102, 255, 1)",
+          "rgba(255, 159, 64, 1)",
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+
   return (
+    <>
+      
     <div className="w-112.5 border-r border-gray-100 h-[calc(100vh-56px)] overflow-y-auto bg-white">
       <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center text-[12px] text-gray-400">
         <input 
@@ -61,6 +95,8 @@ const WatchList = () => {
         })}
       </ul> 
     </div>
+    <DoughnutChart data={data} />
+    </>
   );
 };
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { VerticalGraph } from "./VerticalGraph";
 
 const Holdings = () => {
   const [holdingsData, setHoldingsData] = useState([]);
@@ -10,13 +11,14 @@ const Holdings = () => {
     }).catch(err => console.log("Axios Error:", err));
   }, []);
 
+
   // Summary Calculations
-  const totalInvestment = holdingsData.reduce((acc, stock) => 
+  const totalInvestment = holdingsData.reduce((acc, stock) =>
     acc + (Number(stock.avg) * Number(stock.qty)), 0);
-    
-  const totalCurrentValue = holdingsData.reduce((acc, stock) => 
+
+  const totalCurrentValue = holdingsData.reduce((acc, stock) =>
     acc + (Number(stock.price) * Number(stock.qty)), 0);
-    
+
   const totalPnL = totalCurrentValue - totalInvestment;
 
   // Helper function for comma separation
@@ -27,7 +29,23 @@ const Holdings = () => {
     });
   };
 
+
+
+  const labels = holdingsData.map((subArray) => subArray["name"]);
+
+  const data = {
+    labels,
+    datasets: [
+      {
+        label: "Stock Price",
+        data: holdingsData.map((stock) => stock.price),
+        backgroundColor: "rgba(255, 99, 132, 0.5)",
+      },
+    ],
+  };
+
   return (
+    <>
     <div className="p-4 md:p-2 animate-in fade-in duration-500 font-normal">
       <h3 className="text-gray-500 text-lg mb-6 font-normal">Holdings ({holdingsData.length})</h3>
 
@@ -90,12 +108,15 @@ const Holdings = () => {
         </div>
         <div>
           <p className={`text-2xl font-normal ${totalPnL >= 0 ? "text-green-500" : "text-red-500"}`}>
-            {formatValue(totalPnL)} ({((totalPnL/totalInvestment)*100).toFixed(2)}%)
+            {formatValue(totalPnL)} ({((totalPnL / totalInvestment) * 100).toFixed(2)}%)
           </p>
           <p className="text-[11px] text-gray-400 uppercase mt-1">Total P&L</p>
         </div>
       </div>
+      
     </div>
+    <VerticalGraph data={data} />
+    </>
   );
 };
 
