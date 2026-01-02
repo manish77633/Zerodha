@@ -1,7 +1,7 @@
 import React from 'react';
 import { Users, ShieldAlert, Globe, TrendingUp, ArrowRight } from 'lucide-react';
 
-function Education() {
+function Stats() {
     return (
         <section className="bg-white py-12 md:py-24 font-sans">
             <div className="container w-[80%] mx-auto px-6 md:px-12 lg:px-24 flex flex-col md:flex-row items-center gap-12 lg:gap-20">
@@ -86,4 +86,4 @@ function Education() {
     );
 }
 
-export default Education;
+export default Stats;
