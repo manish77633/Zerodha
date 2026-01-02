@@ -9,7 +9,7 @@ const Positions = () => {
   const [positionsData, setPositionsData] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:3000/allPositions").then((res) => {
+    axios.get("https://zerodha-u5jq.onrender.com/allPositions").then((res) => {
       setPositionsData(res.data);
     }).catch(err => console.log("Axios Error:", err));
   }, []);

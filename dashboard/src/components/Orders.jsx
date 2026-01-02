@@ -6,7 +6,7 @@ const Orders = () => {
 
   useEffect(() => {
     // Database se orders fetch karne ke liye
-    axios.get("http://localhost:3000/allOrders")
+    axios.get("https://zerodha-u5jq.onrender.com/allOrders")
       .then((res) => {
         setOrdersData(res.data);
       })
