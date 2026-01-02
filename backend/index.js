@@ -13,10 +13,7 @@ const PORT = process.env.PORT || 3000;
 const url = process.env.MONGO_URL;
 
 app.use(bodyParser.json());
-app.use(cors({
-  origin: [process.env.FRONTEND_URL, process.env.DASHBOARD_URL, "http://localhost:5173"],
-  credentials: true
-}));
+app.use(cors());
 
 // Database Connection - Server start hone se pehle connect karna behtar hai
 mongoose.connect(url)

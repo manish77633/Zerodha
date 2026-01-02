@@ -21,7 +21,7 @@ const TopBar = () => {
 
         {/* Back to Home Page - Port 5173 */}
         <a
-          href="http://localhost:5173/"
+          href="https://zerodha-zeta-nine.vercel.app/"
           className="hover:text-orange-500 transition-colors border-l pl-4 border-gray-200"
         >
           Zerodha
