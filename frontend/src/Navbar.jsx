@@ -29,18 +29,25 @@ function Navbar() {
                     </div>
 
                     {/* Desktop Links */}
-                    <div className="hidden md:flex space-x-8">
-                        {navLinks.map((link) => (
-                            <Link
-                                key={link.name}
-                                to={link.href}
-                                className="text-gray-700 hover:text-blue-600 transition-colors"
-                            >
-                                {link.name}
-                            </Link>
-                        ))}
-                    </div>
-
+{/* Desktop Links */}
+<div className="hidden md:flex space-x-8 items-center">
+    {navLinks.map((link) => (
+        <Link
+            key={link.name}
+            to={link.href}
+            className="text-gray-500 hover:text-blue-600 transition-colors text-[14px]"
+        >
+            {link.name}
+        </Link>
+    ))}
+    {/* Dashboard Link - Port 5174 */}
+    <a 
+        href="http://localhost:5174/" 
+        className="text-gray-500 hover:text-blue-600 transition-colors text-[14px]"
+    >
+        Dashboard
+    </a>
+</div>
                     {/* Mobile Toggle */}
                     <button
                         className="md:hidden"

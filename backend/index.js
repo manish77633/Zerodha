@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const { HoldingsModel } = require('./model/HoldingsModel');
 const { PositionsModel } = require('./model/PositionsModel');
 const { OrdersModel } = require('./model/OrdersModel');
+const { UserModel } = require("./model/UserModel");
 const bodyParser = require('body-parser');
 const cors = require('cors');
 require('dotenv').config();
@@ -12,7 +13,10 @@ const PORT = process.env.PORT || 3000;
 const url = process.env.MONGO_URL;
 
 app.use(bodyParser.json());
-app.use(cors());
+app.use(cors({
+  origin: [process.env.FRONTEND_URL, process.env.DASHBOARD_URL, "http://localhost:5173"],
+  credentials: true
+}));
 
 // Database Connection - Server start hone se pehle connect karna behtar hai
 mongoose.connect(url)
@@ -107,6 +111,24 @@ app.post("/newOrder", async (req, res) => { // async add kiya
     } catch (err) {
         console.error("Order Save Error:", err);
         res.status(500).send("Error saving order");
+    }
+});
+
+app.get("/allOrders", async (req, res) => {
+    let allOrders = await OrdersModel.find({});
+    res.json(allOrders);
+});
+
+
+app.post("/signup", async (req, res) => {
+    try {
+        const { username, email, password } = req.body;
+        const newUser = new UserModel({ username, email, password });
+        await newUser.save();
+        res.status(201).json({ message: "User created successfully!" });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: "Signup failed. Email might already exist." });
     }
 });
 

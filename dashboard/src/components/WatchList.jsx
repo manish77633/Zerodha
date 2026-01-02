@@ -43,7 +43,7 @@ const WatchList = () => {
   return (
     <>
       
-    <div className="w-112.5 border-r border-gray-100 h-[calc(100vh-56px)] overflow-y-auto bg-white">
+    <div className="w-112.5 border-r border-gray-100 mb-8  bg-white">
       <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center text-[12px] text-gray-400">
         <input 
           type="text" 

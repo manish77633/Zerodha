@@ -20,7 +20,7 @@ const BuyWindow = ({ selectedStock }) => {
 
   return (
     <div className="fixed inset-0 bg-gray-900/40 flex items-center justify-center z-[1000]">
-      <div className="bg-white w-[400px] shadow-2xl rounded-md overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div className="bg-white w-100 shadow-2xl rounded-md overflow-hidden animate-in fade-in zoom-in duration-200">
         
         {/* Header Section */}
         <div className="bg-blue-500 text-white p-4">
