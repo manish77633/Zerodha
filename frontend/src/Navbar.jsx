@@ -42,7 +42,7 @@ function Navbar() {
     ))}
     {/* Dashboard Link - Port 5174 */}
     <a 
-        href="http://localhost:5174/" 
+        href="https://zerodha-liq9.vercel.app/" 
         className="text-gray-500 hover:text-blue-600 transition-colors text-[14px]"
     >
         Dashboard

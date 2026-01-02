@@ -15,7 +15,7 @@ const Signup = () => {
     try {
       await axios.post("https://zerodha-u5jq.onrender.com/signup", formData);
       alert("Signup Success! Redirecting to Dashboard...");
-      window.location.href = "http://localhost:5174"; // Seedha dashboard bhejo
+      window.location.href = "https://zerodha-liq9.vercel.app/"; // Seedha dashboard bhejo
     } catch (err) {
       alert("Signup failed! Try a different email.");
     }
