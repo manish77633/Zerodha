@@ -1,7 +1,13 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
+import {useNavigate} from 'react-router-dom';   
 
 function Education() {
+    const navigate = useNavigate();
+    const handleClick = () => {
+        // Redirect to the signup page
+        navigate('/signup');
+    }
     return (
         <section className="w-full bg-white py-12 md:py-24">
             <div className="container w-[80%] mx-auto px-6 md:px-12 lg:px-24">
@@ -63,7 +69,9 @@ function Education() {
                     </p> 
                     
                     {/* BUTTON: Mobile pe text-base aur kam padding, Desktop pe text-xl aur zyada padding */}
-                    <button className='mt-8 md:mt-12 bg-[#387ed1] hover:bg-gray-900 text-white 
+                    <button
+                    onClick={handleClick}
+                    className='mt-8 md:mt-12 bg-[#387ed1] hover:bg-gray-900 text-white 
                         text-base md:text-xl 
                         px-6 md:px-10 
                         py-2 md:py-3 

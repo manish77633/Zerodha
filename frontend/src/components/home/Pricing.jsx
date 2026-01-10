@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 function Pricing() {
     return (
@@ -16,10 +17,10 @@ function Pricing() {
                             We pioneered the concept of discount broking and price transparency in India. 
                             Flat fees and no hidden charges.
                         </p>
-                        <a href="#" className="group text-blue-500 font-medium text-lg flex items-center hover:text-blue-700 transition-colors">
+                        <Link to="/pricing" className="group text-blue-500 font-medium text-lg flex items-center hover:text-blue-700 transition-colors">
                             See pricing 
                             <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
-                        </a>
+                        </Link>
                     </div>
 
                     {/* Right Pricing Cards - Changed to flex-col for mobile */}
