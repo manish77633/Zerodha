@@ -59,22 +59,32 @@ function Navbar() {
             </div>
 
             {/* Mobile Menu */}
-            {isOpen && (
-                <div className="md:hidden bg-white border-t">
-                    <div className="px-4 py-4 space-y-3">
-                        {navLinks.map((link) => (
-                            <Link
-                                key={link.name}
-                                to={link.href}
-                                onClick={() => setIsOpen(false)}
-                                className="block text-gray-800 hover:text-blue-600 py-2"
-                            >
-                                {link.name}
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-            )}
+            {/* Mobile Menu */}
+{isOpen && (
+    <div className="md:hidden bg-white border-t">
+        <div className="px-4 py-4 space-y-3">
+            {navLinks.map((link) => (
+                <Link
+                    key={link.name}
+                    to={link.href}
+                    onClick={() => setIsOpen(false)}
+                    className="block text-gray-800 hover:text-blue-600 py-2"
+                >
+                    {link.name}
+                </Link>
+            ))}
+
+            {/* Ye line Mobile Menu ke liye add karo */}
+            <a 
+                href="https://zerodha-liq9.vercel.app/" 
+                className="block text-gray-800 hover:text-blue-600 py-2"
+                onClick={() => setIsOpen(false)}
+            >
+                Dashboard
+            </a>
+        </div>
+    </div>
+)}
         </nav>
     );
 }

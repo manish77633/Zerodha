@@ -1,5 +1,6 @@
 import React from 'react';
 import { Users, ShieldAlert, Globe, TrendingUp, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 function Stats() {
     return (
@@ -70,14 +71,14 @@ function Stats() {
                     
                     {/* YAHAN CHANGE KIYA HAI: flex-row hamesha rahega aur wrap handle karega */}
                     <div className="flex flex-row flex-wrap justify-center gap-4 sm:gap-6 md:gap-12 mt-10">
-                        <a href="#" className="group text-blue-500 font-semibold text-sm sm:text-lg flex items-center hover:text-blue-700 transition-colors whitespace-nowrap">
+                        <Link  to="/product" className="group text-blue-500 font-semibold text-sm sm:text-lg flex items-center hover:text-blue-700 transition-colors whitespace-nowrap">
                             Explore our products 
                             <ArrowRight className="ml-1 sm:ml-2 w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-1" />
-                        </a>
-                        <a href="#" className="group text-blue-500 font-semibold text-sm sm:text-lg flex items-center hover:text-blue-700 transition-colors whitespace-nowrap">
+                        </Link>
+                        <Link to="/product" className="group text-blue-500 font-semibold text-sm sm:text-lg flex items-center hover:text-blue-700 transition-colors whitespace-nowrap">
                             Try Kite demo 
                             <ArrowRight className="ml-1 sm:ml-2 w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-1" />
-                        </a>
+                        </Link>
                     </div>
                 </div>
 
