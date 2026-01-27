@@ -3,10 +3,13 @@ const mongoose = require('mongoose');
 const { HoldingsModel } = require('./model/HoldingsModel');
 const { PositionsModel } = require('./model/PositionsModel');
 const { OrdersModel } = require('./model/OrdersModel');
+console.log("OrdersModel Schema:", OrdersModel.schema.obj);
+console.log("hello")
 const { UserModel } = require("./model/UserModel");
 const bodyParser = require('body-parser');
 const cors = require('cors');
 require('dotenv').config();
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -92,23 +95,93 @@ app.get("/allPositions", async (req, res) => {
     let allPositions = await PositionsModel.find({});
     res.json(allPositions);
 });
+app.post("/newOrder", async (req, res) => {
+  try {
+    const name = req.body.name;
+    const qty = Number(req.body.qty);
+    const price = Number(req.body.price);
+    const mode = req.body.mode;
+    const product = req.body.product; // CNC or MIS from Frontend
+    const addedTime = req.body.addedTime;
 
-app.post("/newOrder", async (req, res) => { // async add kiya
-    try {
-        let newOrder = new OrdersModel({
-            name: req.body.name,
-            qty: req.body.qty,
-            price: req.body.price,
-            mode: req.body.mode, // frontend se mode bhi aa raha hai toh add kar dein
-        });
+    // 1. Orders Table mein entry
+    const newOrder = new OrdersModel({ 
+      name, 
+      qty, 
+      price, 
+      mode, 
+      addedTime,
+    });
+    await newOrder.save();
 
-        await newOrder.save(); // await lagana bahut zaroori hai
-        console.log("Order Saved successfully!");
-        res.status(201).send("Order received and saved");
-    } catch (err) {
-        console.error("Order Save Error:", err);
-        res.status(500).send("Error saving order");
+    // 2. Holdings Table Logic (Hamesha Investment view ke liye)
+    let existingHolding = await HoldingsModel.findOne({ name: name });
+
+    if (existingHolding) {
+      let oldQty = Number(existingHolding.qty);
+      let oldAvg = Number(existingHolding.avg);
+      let newTotalQty = oldQty + qty;
+      let newAvgPrice = ((oldQty * oldAvg) + (qty * price)) / newTotalQty;
+      let netChange = (((price - newAvgPrice) / newAvgPrice) * 100).toFixed(2);
+
+      await HoldingsModel.updateOne(
+        { name: name },
+        { 
+          qty: newTotalQty, 
+          avg: newAvgPrice.toFixed(2),
+          price: price, 
+          net: (netChange >= 0 ? "+" : "") + netChange + "%"
+        }
+      );
+    } else {
+      const newHolding = new HoldingsModel({
+        name,
+        qty,
+        avg: price,
+        price,
+        net: "+0.00%",
+        day: "+0.00%", 
+      });
+      await newHolding.save();
     }
+
+    // 3. Positions Logic (Product ke sath sync kiya)
+    // Hum product wise check karenge taaki CNC aur MIS alag dikhen
+    let existingPosition = await PositionsModel.findOne({ name: name, product: product });
+
+    if (existingPosition) {
+      let oldQty = Number(existingPosition.qty);
+      let oldAvg = Number(existingPosition.avg);
+      let newTotalQty = oldQty + qty;
+      let newAvgPrice = ((oldQty * oldAvg) + (qty * price)) / newTotalQty;
+
+      await PositionsModel.updateOne(
+        { name: name, product: product },
+        {
+          qty: newTotalQty,
+          avg: newAvgPrice.toFixed(2),
+          price: price,
+        }
+      );
+    } else {
+      const newPosition = new PositionsModel({
+        product: product, // CNC / MIS
+        name: name,
+        qty: qty,
+        avg: price,
+        price: price,
+        net: "+0.00%",
+        day: "+0.00%",
+        isLoss: false,
+      });
+      await newPosition.save();
+    }
+
+    res.status(200).json({ message: "Order placed, Holdings and Positions updated!" });
+  } catch (err) {
+    console.error("Error in /newOrder:", err);
+    res.status(500).json({ error: "Server Error", details: err.message });
+  }
 });
 
 app.get("/allOrders", async (req, res) => {
