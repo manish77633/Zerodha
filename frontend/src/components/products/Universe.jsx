@@ -1,6 +1,12 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function Universe() {
+    const navigate = useNavigate();
+    const handleClick = () => {
+        // Redirect to the signup page
+        navigate('/signup');
+    }
     // Partner platforms ka data array
     const partners = [
         {
@@ -63,7 +69,9 @@ function Universe() {
 
                 {/* CTA Button */}
                 <div className="flex justify-center mt-8 md:mt-8f">
-                    <button className="bg-[#387ed1] hover:bg-gray-900 text-white text-xl px-12 py-3 rounded-sm font-medium transition-all shadow-md active:scale-95">
+                    <button
+                    onClick={handleClick}
+                    className="bg-[#387ed1] hover:bg-gray-900 text-white text-xl px-12 py-3 rounded-sm font-medium transition-all shadow-md active:scale-95">
                         Sign up for free
                     </button>
                 </div>
