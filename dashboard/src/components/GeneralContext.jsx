@@ -6,6 +6,10 @@ export const GeneralContext = createContext();
 export const GeneralContextProvider = (props) => {
   const [isBuyWindowOpen, setIsBuyWindowOpen] = useState(false);
   const [selectedStock, setSelectedStock] = useState(null);
+  
+  // Data refresh karne ke liye trigger
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const refreshDashboard = () => setRefreshTrigger(prev => prev + 1);
 
   const handleOpenBuyWindow = (stock) => {
     setSelectedStock(stock);
@@ -22,6 +26,8 @@ export const GeneralContextProvider = (props) => {
       value={{
         openBuyWindow: handleOpenBuyWindow,
         closeBuyWindow: handleCloseBuyWindow,
+        refreshDashboard,
+        refreshTrigger,
       }}
     >
       {props.children}

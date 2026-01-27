@@ -1,18 +1,11 @@
 import React from "react";
-// Data folder se positions ko import kiya
-import  { useEffect, useState } from "react";
+// axios aur useEffect hataya taaki delay na ho
 
-import axios from "axios";
-
-const Positions = () => {
-
-  const [positionsData, setPositionsData] = useState([]);
-
-  useEffect(() => {
-    axios.get("https://zerodha-u5jq.onrender.com/allPositions").then((res) => {
-      setPositionsData(res.data);
-    }).catch(err => console.log("Axios Error:", err));
-  }, []);
+// 1. Dashboard.jsx se 'allPositions' prop ko receive karo
+const Positions = ({ allPositions = [] }) => {
+  
+  // Taaki niche ka tera purana code (positionsData.map etc.) bina badle chal jaye:
+  const positionsData = allPositions;
 
   // Total P&L calculate karne ka dynamic logic
   const totalPnL = positionsData.reduce((acc, stock) => {

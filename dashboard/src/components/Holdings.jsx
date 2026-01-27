@@ -1,18 +1,12 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React from "react";
+// axios aur useEffect hataya taaki delay na ho
 import { VerticalGraph } from "./VerticalGraph";
 
-const Holdings = () => {
-  const [holdingsData, setHoldingsData] = useState([]);
+// 1. Props se data receive kiya (Dashboard.jsx se)
+const Holdings = ({ allHoldings = [] }) => {
+  const holdingsData = allHoldings;
 
-  useEffect(() => {
-    axios.get("https://zerodha-u5jq.onrender.com/allHoldings").then((res) => {
-      setHoldingsData(res.data);
-    }).catch(err => console.log("Axios Error:", err));
-  }, []);
-
-
-  // Summary Calculations
+  // Summary Calculations - Ab ye direkt 'holdingsData' use karega
   const totalInvestment = holdingsData.reduce((acc, stock) =>
     acc + (Number(stock.avg) * Number(stock.qty)), 0);
 
@@ -28,8 +22,6 @@ const Holdings = () => {
       maximumFractionDigits: 2,
     });
   };
-
-
 
   const labels = holdingsData.map((subArray) => subArray["name"]);
 
@@ -96,7 +88,6 @@ const Holdings = () => {
         </table>
       </div>
 
-      {/* Summary Section with Comma Separation */}
       <div className="flex gap-16 mt-10 border-t border-gray-100 pt-6">
         <div>
           <p className="text-2xl font-normal text-gray-700">{formatValue(totalInvestment)}</p>
@@ -108,7 +99,7 @@ const Holdings = () => {
         </div>
         <div>
           <p className={`text-2xl font-normal ${totalPnL >= 0 ? "text-green-500" : "text-red-500"}`}>
-            {formatValue(totalPnL)} ({((totalPnL / totalInvestment) * 100).toFixed(2)}%)
+            {formatValue(totalPnL)} ({totalInvestment !== 0 ? ((totalPnL / totalInvestment) * 100).toFixed(2) : 0}%)
           </p>
           <p className="text-[11px] text-gray-400 uppercase mt-1">Total P&L</p>
         </div>
