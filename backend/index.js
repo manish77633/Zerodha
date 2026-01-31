@@ -97,87 +97,77 @@ app.get("/allPositions", async (req, res) => {
 });
 app.post("/newOrder", async (req, res) => {
   try {
-    const name = req.body.name;
+    const { name, mode, product, addedTime } = req.body;
     const qty = Number(req.body.qty);
     const price = Number(req.body.price);
-    const mode = req.body.mode;
-    const product = req.body.product; // CNC or MIS from Frontend
-    const addedTime = req.body.addedTime;
 
-    // 1. Orders Table mein entry
-    const newOrder = new OrdersModel({ 
-      name, 
-      qty, 
-      price, 
-      mode, 
-      addedTime,
-    });
+    // 1. Order Table mein entry hamesha hogi (Record ke liye)
+    const newOrder = new OrdersModel({ name, qty, price, mode, addedTime });
     await newOrder.save();
 
-    // 2. Holdings Table Logic (Hamesha Investment view ke liye)
-    let existingHolding = await HoldingsModel.findOne({ name: name });
+    if (mode === "BUY") {
+      // --- BUY LOGIC (Jo tune pehle likha tha, wahi hai) ---
+      
+      // Holdings Update
+      let existingHolding = await HoldingsModel.findOne({ name });
+      if (existingHolding) {
+        let oldQty = Number(existingHolding.qty);
+        let oldAvg = Number(existingHolding.avg);
+        let newTotalQty = oldQty + qty;
+        let newAvgPrice = ((oldQty * oldAvg) + (qty * price)) / newTotalQty;
+        let netChange = (((price - newAvgPrice) / newAvgPrice) * 100).toFixed(2);
 
-    if (existingHolding) {
-      let oldQty = Number(existingHolding.qty);
-      let oldAvg = Number(existingHolding.avg);
-      let newTotalQty = oldQty + qty;
-      let newAvgPrice = ((oldQty * oldAvg) + (qty * price)) / newTotalQty;
-      let netChange = (((price - newAvgPrice) / newAvgPrice) * 100).toFixed(2);
-
-      await HoldingsModel.updateOne(
-        { name: name },
-        { 
+        await HoldingsModel.updateOne({ name }, { 
           qty: newTotalQty, 
-          avg: newAvgPrice.toFixed(2),
-          price: price, 
-          net: (netChange >= 0 ? "+" : "") + netChange + "%"
+          avg: newAvgPrice.toFixed(2), 
+          price, 
+          net: (netChange >= 0 ? "+" : "") + netChange + "%" 
+        });
+      } else {
+        await new HoldingsModel({ name, qty, avg: price, price, net: "+0.00%", day: "+0.00%" }).save();
+      }
+
+      // Positions Update
+      let existingPos = await PositionsModel.findOne({ name, product });
+      if (existingPos) {
+        let newTotalQty = Number(existingPos.qty) + qty;
+        let newAvgPrice = ((Number(existingPos.qty) * Number(existingPos.avg)) + (qty * price)) / newTotalQty;
+        await PositionsModel.updateOne({ name, product }, { qty: newTotalQty, avg: newAvgPrice.toFixed(2), price });
+      } else {
+        await new PositionsModel({ product, name, qty, avg: price, price, net: "+0.00%", day: "+0.00%", isLoss: false }).save();
+      }
+
+    } else if (mode === "SELL") {
+      // --- SELL LOGIC (Naya Addition) ---
+
+      // 1. Validation: Pehle check karo stock hai bhi ya nahi bechne ke liye
+      let existingHolding = await HoldingsModel.findOne({ name });
+      
+      if (!existingHolding || existingHolding.qty < qty) {
+        return res.status(400).json({ error: "Insufficient quantity in Holdings to sell!" });
+      }
+
+      // 2. Holdings Update: Sirf Quantity kam hogi, Average Price change NAHI hogi
+      let newQty = existingHolding.qty - qty;
+      if (newQty === 0) {
+        await HoldingsModel.deleteOne({ name }); // Saara bech diya toh delete
+      } else {
+        await HoldingsModel.updateOne({ name }, { qty: newQty });
+      }
+
+      // 3. Positions Update (MIS/CNC dono ke liye)
+      let existingPos = await PositionsModel.findOne({ name, product });
+      if (existingPos) {
+        let newPosQty = existingPos.qty - qty;
+        if (newPosQty === 0) {
+          await PositionsModel.deleteOne({ name, product });
+        } else {
+          await PositionsModel.updateOne({ name, product }, { qty: newPosQty });
         }
-      );
-    } else {
-      const newHolding = new HoldingsModel({
-        name,
-        qty,
-        avg: price,
-        price,
-        net: "+0.00%",
-        day: "+0.00%", 
-      });
-      await newHolding.save();
+      }
     }
 
-    // 3. Positions Logic (Product ke sath sync kiya)
-    // Hum product wise check karenge taaki CNC aur MIS alag dikhen
-    let existingPosition = await PositionsModel.findOne({ name: name, product: product });
-
-    if (existingPosition) {
-      let oldQty = Number(existingPosition.qty);
-      let oldAvg = Number(existingPosition.avg);
-      let newTotalQty = oldQty + qty;
-      let newAvgPrice = ((oldQty * oldAvg) + (qty * price)) / newTotalQty;
-
-      await PositionsModel.updateOne(
-        { name: name, product: product },
-        {
-          qty: newTotalQty,
-          avg: newAvgPrice.toFixed(2),
-          price: price,
-        }
-      );
-    } else {
-      const newPosition = new PositionsModel({
-        product: product, // CNC / MIS
-        name: name,
-        qty: qty,
-        avg: price,
-        price: price,
-        net: "+0.00%",
-        day: "+0.00%",
-        isLoss: false,
-      });
-      await newPosition.save();
-    }
-
-    res.status(200).json({ message: "Order placed, Holdings and Positions updated!" });
+    res.status(200).json({ message: "Order processed successfully!" });
   } catch (err) {
     console.error("Error in /newOrder:", err);
     res.status(500).json({ error: "Server Error", details: err.message });
