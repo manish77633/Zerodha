@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Routes, Route } from "react-router-dom";
 import axios from "axios";
-import { GeneralContext } from "./GeneralContext";
+import GeneralContext from "./Context";
 import WatchList from "./WatchList";
 import Summary from "./Summary";
 import Orders from "./Orders"; 

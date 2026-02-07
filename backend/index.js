@@ -3,13 +3,10 @@ const mongoose = require('mongoose');
 const { HoldingsModel } = require('./model/HoldingsModel');
 const { PositionsModel } = require('./model/PositionsModel');
 const { OrdersModel } = require('./model/OrdersModel');
-console.log("OrdersModel Schema:", OrdersModel.schema.obj);
-console.log("hello")
 const { UserModel } = require("./model/UserModel");
 const bodyParser = require('body-parser');
 const cors = require('cors');
 require('dotenv').config();
-
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,180 +15,250 @@ const url = process.env.MONGO_URL;
 app.use(bodyParser.json());
 app.use(cors());
 
-// Database Connection - Server start hone se pehle connect karna behtar hai
+// Database Connection
 mongoose.connect(url)
-  .then(() => console.log("Connected to MongoDB Atlas"))
-  .catch((err) => console.log("DB Connection Error:", err));
-
-  // ---------------------holdings data--------------------
-  
-// app.get('/addHoldings', async (req, res) => {
-//   let tempHoldings = [
-//     { name: "BHARTIARTL", qty: 2, avg: 538.05, price: 541.15, net: "+2.58%", day: "+200.99%" },
-//     { name: "HDFCBANK", qty: 2, avg: 1383.4, price: 1522.35, net: "-10.04%", day: "+0.11%" },
-//     { name: "HINDUNILVR", qty: 1, avg: 2335.85, price: 2417.4, net: "+3.49%", day: "+0.21%" },
-//     { name: "INFY", qty: 1, avg: 1350.5, price: 1555.45, net: "+15.18%", day: "-1.60%" },
-//     { name: "ITC", qty: 5, avg: 202.0, price: 207.9, net: "+2.92%", day: "+0.80%" },
-//     { name: "KPITTECH", qty: 5, avg: 250.3, price: 266.45, net: "+6.45%", day: "+3.54%" },
-//     { name: "M&M", qty: 2, avg: 809.9, price: 779.8, net: "-3.72%", day: "-0.01%" },
-//     { name: "RELIANCE", qty: 1, avg: 2193.7, price: 2112.4, net: "-3.71%", day: "+1.44%" },
-//     { name: "SBIN", qty: 4, avg: 324.35, price: 430.2, net: "+32.63%", day: "-0.34%" },
-//     { name: "SGBMAY29", qty: 2, avg: 4727.0, price: 4719.0, net: "-0.17%", day: "+0.15%" },
-//     { name: "TATAPOWER", qty: 5, avg: 104.2, price: 124.15, net: "+19.15%", day: "-0.24%" },
-//     { name: "TCS", qty: 1, avg: 3041.7, price: 3194.8, net: "+5.03%", day: "-0.25%" },
-//     { name: "WIPRO", qty: 4, avg: 489.3, price: 577.75, net: "+18.08%", day: "+0.32%" },
-//   ];
-
-//   try {
-//     // Bulk Insert: Sabhi holdings ko ek sath save karega
-//     await HoldingsModel.insertMany(tempHoldings);
-//     res.send('Holdings added successfully');
-//   } catch (error) {
-//     console.error("Error saving holdings:", error);
-//     res.status(500).send("Error adding data to database");
-//   }
-// });
-
-// --------------------position data--------------------
-// app.get('/addPositions', async (req, res) => {
-//   let tempPositoins = [
-//     {
-//       product: "CNC",
-//       name: "EVEREADY",
-//       qty: 2,
-//       avg: 316.27,
-//       price: 312.35,
-//       net: "+0.58%",
-//       day: "-1.24%",
-//       isLoss: true,
-//     },
-//     {
-//       product: "CNC",
-//       name: "JUBLFOOD",
-//       qty: 1,
-//       avg: 3124.75,
-//       price: 3082.65,
-//       net: "+10.04%",
-//       day: "-1.35%",
-//       isLoss: true,
-//     },
-//   ];
-//   try {
-//     await PositionsModel.insertMany(tempPositoins);
-//     res.send('Positions added successfully');
-//   } catch (error) {
-//     console.error("Error saving positions:", error);
-//     res.status(500).send("Error adding data to database");
-//   }
-// });
-
+  .then(() => console.log("✅ Connected to MongoDB Atlas"))
+  .catch((err) => console.log("❌ DB Connection Error:", err));
 
 app.get("/allHoldings", async (req, res) => {
+  try {
     let allHoldings = await HoldingsModel.find({});
     res.json(allHoldings);
+  } catch (err) {
+    console.error("Error fetching holdings:", err);
+    res.status(500).json({ error: "Failed to fetch holdings" });
+  }
 });
 
 app.get("/allPositions", async (req, res) => {
+  try {
     let allPositions = await PositionsModel.find({});
     res.json(allPositions);
-});
-app.post("/newOrder", async (req, res) => {
-  try {
-    const { name, mode, product, addedTime } = req.body;
-    const qty = Number(req.body.qty);
-    const price = Number(req.body.price);
-
-    // 1. Order Table mein entry hamesha hogi (Record ke liye)
-    const newOrder = new OrdersModel({ name, qty, price, mode, addedTime });
-    await newOrder.save();
-
-    if (mode === "BUY") {
-      // --- BUY LOGIC (Jo tune pehle likha tha, wahi hai) ---
-      
-      // Holdings Update
-      let existingHolding = await HoldingsModel.findOne({ name });
-      if (existingHolding) {
-        let oldQty = Number(existingHolding.qty);
-        let oldAvg = Number(existingHolding.avg);
-        let newTotalQty = oldQty + qty;
-        let newAvgPrice = ((oldQty * oldAvg) + (qty * price)) / newTotalQty;
-        let netChange = (((price - newAvgPrice) / newAvgPrice) * 100).toFixed(2);
-
-        await HoldingsModel.updateOne({ name }, { 
-          qty: newTotalQty, 
-          avg: newAvgPrice.toFixed(2), 
-          price, 
-          net: (netChange >= 0 ? "+" : "") + netChange + "%" 
-        });
-      } else {
-        await new HoldingsModel({ name, qty, avg: price, price, net: "+0.00%", day: "+0.00%" }).save();
-      }
-
-      // Positions Update
-      let existingPos = await PositionsModel.findOne({ name, product });
-      if (existingPos) {
-        let newTotalQty = Number(existingPos.qty) + qty;
-        let newAvgPrice = ((Number(existingPos.qty) * Number(existingPos.avg)) + (qty * price)) / newTotalQty;
-        await PositionsModel.updateOne({ name, product }, { qty: newTotalQty, avg: newAvgPrice.toFixed(2), price });
-      } else {
-        await new PositionsModel({ product, name, qty, avg: price, price, net: "+0.00%", day: "+0.00%", isLoss: false }).save();
-      }
-
-    } else if (mode === "SELL") {
-      // --- SELL LOGIC (Naya Addition) ---
-
-      // 1. Validation: Pehle check karo stock hai bhi ya nahi bechne ke liye
-      let existingHolding = await HoldingsModel.findOne({ name });
-      
-      if (!existingHolding || existingHolding.qty < qty) {
-        return res.status(400).json({ error: "Insufficient quantity in Holdings to sell!" });
-      }
-
-      // 2. Holdings Update: Sirf Quantity kam hogi, Average Price change NAHI hogi
-      let newQty = existingHolding.qty - qty;
-      if (newQty === 0) {
-        await HoldingsModel.deleteOne({ name }); // Saara bech diya toh delete
-      } else {
-        await HoldingsModel.updateOne({ name }, { qty: newQty });
-      }
-
-      // 3. Positions Update (MIS/CNC dono ke liye)
-      let existingPos = await PositionsModel.findOne({ name, product });
-      if (existingPos) {
-        let newPosQty = existingPos.qty - qty;
-        if (newPosQty === 0) {
-          await PositionsModel.deleteOne({ name, product });
-        } else {
-          await PositionsModel.updateOne({ name, product }, { qty: newPosQty });
-        }
-      }
-    }
-
-    res.status(200).json({ message: "Order processed successfully!" });
   } catch (err) {
-    console.error("Error in /newOrder:", err);
-    res.status(500).json({ error: "Server Error", details: err.message });
+    console.error("Error fetching positions:", err);
+    res.status(500).json({ error: "Failed to fetch positions" });
   }
 });
 
 app.get("/allOrders", async (req, res) => {
-    let allOrders = await OrdersModel.find({});
+  try {
+    let allOrders = await OrdersModel.find({}).sort({ _id: -1 });
     res.json(allOrders);
+  } catch (err) {
+    console.error("Error fetching orders:", err);
+    res.status(500).json({ error: "Failed to fetch orders" });
+  }
 });
 
+// ==================== MAIN ORDER ROUTE ====================
+app.post("/newOrder", async (req, res) => {
+  try {
+    const { name, product, addedTime } = req.body;
+    
+    const mode = req.body.mode ? req.body.mode.trim().toUpperCase() : "";
+    const qty = Number(req.body.qty);
+    const price = Number(req.body.price);
+
+    // Validation
+    if (!name || !mode || !product) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    if (!["BUY", "SELL"].includes(mode)) {
+      return res.status(400).json({ error: "Invalid mode. Must be BUY or SELL" });
+    }
+
+    if (qty <= 0 || price <= 0) {
+      return res.status(400).json({ error: "Quantity and price must be greater than 0" });
+    }
+
+    console.log(`\n🔄 Processing ${mode} Order`);
+    console.log(`Stock: ${name} | Qty: ${qty} | Price: ₹${price} | Product: ${product}`);
+
+    // Save order record
+    await new OrdersModel({ name, qty, price, mode, product, addedTime }).save();
+
+    // ==================== BUY LOGIC ====================
+    if (mode === "BUY") {
+      console.log("📈 BUY Order - Increasing Holdings");
+      
+      let existingHolding = await HoldingsModel.findOne({ name });
+      
+      if (existingHolding) {
+        let oldQty = Number(existingHolding.qty);
+        let oldAvg = Number(existingHolding.avg);
+        let newTotalQty = oldQty + qty; // ✅ PLUS for BUY
+        
+        // Weighted Average
+        let newAvgPrice = ((oldQty * oldAvg) + (qty * price)) / newTotalQty;
+
+        await HoldingsModel.updateOne(
+          { name }, 
+          { 
+            qty: newTotalQty, 
+            avg: newAvgPrice.toFixed(2), 
+            price: price.toFixed(2) 
+          }
+        );
+        
+        console.log(`✅ Holdings Updated: ${oldQty} → ${newTotalQty} (INCREASED by ${qty})`);
+      } else {
+        await new HoldingsModel({ 
+          name, 
+          qty, 
+          avg: price.toFixed(2), 
+          price: price.toFixed(2), 
+          net: "+0.00%", 
+          day: "+0.00%" 
+        }).save();
+        
+        console.log(`✅ New Holding Created: ${qty} shares`);
+      }
+    } 
+    
+    // ==================== SELL LOGIC ====================
+    else if (mode === "SELL") {
+      console.log("📉 SELL Order - Decreasing Holdings");
+      
+      let existingHolding = await HoldingsModel.findOne({ name });
+
+      // Check if holdings exist
+      if (!existingHolding) {
+        console.log(`❌ No holdings found for ${name}`);
+        return res.status(400).json({ 
+          error: `You don't own any shares of ${name}!` 
+        });
+      }
+
+      let currentQty = Number(existingHolding.qty);
+      
+      console.log(`Current Holdings: ${currentQty} shares`);
+      console.log(`Trying to sell: ${qty} shares`);
+      
+      // Check if sufficient shares
+      if (currentQty < qty) {
+        console.log(`❌ Insufficient shares!`);
+        return res.status(400).json({ 
+          error: `Insufficient shares! You have ${currentQty} but trying to sell ${qty}` 
+        });
+      }
+
+      let newQty = currentQty - qty; // ✅ MINUS for SELL (यही सही है!)
+
+      console.log(`New Quantity: ${currentQty} - ${qty} = ${newQty}`);
+
+      if (newQty === 0) {
+        await HoldingsModel.deleteOne({ name });
+        console.log(`✅ All shares sold - Holding deleted`);
+      } else {
+        await HoldingsModel.updateOne(
+          { name }, 
+          { 
+            qty: newQty,  // ✅ Reduced quantity
+            price: price.toFixed(2)
+          }
+        );
+        console.log(`✅ Holdings Updated: ${currentQty} → ${newQty} (DECREASED by ${qty})`);
+      }
+    }
+
+    // ==================== POSITIONS UPDATE ====================
+    console.log(`\n📊 Updating Positions Table`);
+    
+    let existingPos = await PositionsModel.findOne({ name, product });
+    
+    // For positions: BUY adds positive, SELL adds negative
+    let qtyChange = (mode === "BUY") ? qty : -qty;
+    
+    console.log(`Position Quantity Change: ${qtyChange}`);
+
+    if (existingPos) {
+      let currentPosQty = Number(existingPos.qty);
+      let newPosQty = currentPosQty + qtyChange; // This works because qtyChange is already +/-
+      
+      console.log(`Current Position: ${currentPosQty}`);
+      console.log(`New Position: ${currentPosQty} + (${qtyChange}) = ${newPosQty}`);
+      
+      if (newPosQty === 0) {
+        await PositionsModel.deleteOne({ name, product });
+        console.log(`✅ Position Closed`);
+      } else {
+        let updateData = { 
+          qty: newPosQty, 
+          price: price.toFixed(2) 
+        };
+        
+        // Update weighted average only for BUY
+        if (mode === "BUY" && currentPosQty > 0) {
+          let oldPosAvg = Number(existingPos.avg);
+          let newPosAvg = ((currentPosQty * oldPosAvg) + (qty * price)) / newPosQty;
+          updateData.avg = newPosAvg.toFixed(2);
+        }
+        
+        await PositionsModel.updateOne({ name, product }, updateData);
+        console.log(`✅ Position Updated: ${currentPosQty} → ${newPosQty}`);
+      }
+    } else {
+      await new PositionsModel({
+        product, 
+        name, 
+        qty: qtyChange,  // Will be negative if SELL
+        avg: price.toFixed(2), 
+        price: price.toFixed(2), 
+        net: "+0.00%", 
+        day: "+0.00%", 
+        isLoss: false
+      }).save();
+      
+      console.log(`✅ New Position Created: ${qtyChange}`);
+    }
+
+    console.log(`\n✅ Order Processed Successfully!\n`);
+
+    res.status(200).json({ 
+      message: `${mode} order processed successfully!`,
+      order: { name, qty, price, mode, product }
+    });
+
+  } catch (err) {
+    console.error("❌ Backend Error:", err.message);
+    res.status(500).json({ 
+      error: "Internal Server Error", 
+      details: err.message 
+    });
+  }
+});
 
 app.post("/signup", async (req, res) => {
-    try {
-        const { username, email, password } = req.body;
-        const newUser = new UserModel({ username, email, password });
-        await newUser.save();
-        res.status(201).json({ message: "User created successfully!" });
-    } catch (err) {
-        console.log(err);
-        res.status(500).json({ error: "Signup failed. Email might already exist." });
+  try {
+    const { username, email, password } = req.body;
+    
+    const existingUser = await UserModel.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "Email already registered" });
     }
+    
+    const newUser = new UserModel({ username, email, password });
+    await newUser.save();
+    
+    res.status(201).json({ 
+      message: "User created successfully!",
+      user: { username, email }
+    });
+  } catch (err) {
+    console.error("Signup Error:", err);
+    res.status(500).json({ error: "Signup failed" });
+  }
+});
+
+app.get("/health", (req, res) => {
+  res.json({ 
+    status: "OK", 
+    timestamp: new Date().toISOString(),
+    database: mongoose.connection.readyState === 1 ? "Connected" : "Disconnected"
+  });
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
