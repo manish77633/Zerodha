@@ -51,181 +51,121 @@ app.get("/allOrders", async (req, res) => {
 });
 
 // ==================== MAIN ORDER ROUTE ====================
+// ==================== MAIN ORDER ROUTE (FIXED) ====================
 app.post("/newOrder", async (req, res) => {
   try {
-    const { name, product, addedTime } = req.body;
+    // 1. Data Cleaning (Inputs ko saaf aur consistent banao)
+    const name = req.body.name ? req.body.name.trim().toUpperCase() : ""; // Stock name always UPPERCASE
+    const mode = req.body.mode ? req.body.mode.trim().toUpperCase() : ""; // BUY/SELL
+    const product = req.body.product ? req.body.product.trim().toUpperCase() : "CNC"; // Product consistency
+    const addedTime = req.body.addedTime;
     
-    const mode = req.body.mode ? req.body.mode.trim().toUpperCase() : "";
     const qty = Number(req.body.qty);
     const price = Number(req.body.price);
 
-    // Validation
-    if (!name || !mode || !product) {
-      return res.status(400).json({ error: "Missing required fields" });
+    // 2. Basic Validation
+    if (!name || !mode || qty <= 0 || price <= 0) {
+      return res.status(400).json({ error: "Invalid data. Check Name, Qty, or Price." });
     }
 
-    if (!["BUY", "SELL"].includes(mode)) {
-      return res.status(400).json({ error: "Invalid mode. Must be BUY or SELL" });
-    }
+    console.log(`\n🔄 Processing ${mode} Order for ${name} (${product}) | Qty: ${qty}`);
 
-    if (qty <= 0 || price <= 0) {
-      return res.status(400).json({ error: "Quantity and price must be greater than 0" });
-    }
-
-    console.log(`\n🔄 Processing ${mode} Order`);
-    console.log(`Stock: ${name} | Qty: ${qty} | Price: ₹${price} | Product: ${product}`);
-
-    // Save order record
+    // Order History save karo
     await new OrdersModel({ name, qty, price, mode, product, addedTime }).save();
 
-    // ==================== BUY LOGIC ====================
+    // ==================== HOLDINGS LOGIC ====================
     if (mode === "BUY") {
-      console.log("📈 BUY Order - Increasing Holdings");
-      
+      // --- BUY ---
       let existingHolding = await HoldingsModel.findOne({ name });
       
       if (existingHolding) {
         let oldQty = Number(existingHolding.qty);
         let oldAvg = Number(existingHolding.avg);
-        let newTotalQty = oldQty + qty; // ✅ PLUS for BUY
-        
-        // Weighted Average
+        let newTotalQty = oldQty + qty;
         let newAvgPrice = ((oldQty * oldAvg) + (qty * price)) / newTotalQty;
 
         await HoldingsModel.updateOne(
           { name }, 
-          { 
-            qty: newTotalQty, 
-            avg: newAvgPrice.toFixed(2), 
-            price: price.toFixed(2) 
-          }
+          { qty: newTotalQty, avg: newAvgPrice.toFixed(2), price: price }
         );
-        
-        console.log(`✅ Holdings Updated: ${oldQty} → ${newTotalQty} (INCREASED by ${qty})`);
       } else {
         await new HoldingsModel({ 
-          name, 
-          qty, 
-          avg: price.toFixed(2), 
-          price: price.toFixed(2), 
-          net: "+0.00%", 
-          day: "+0.00%" 
+          name, qty, avg: price.toFixed(2), price, net: "+0.00%", day: "+0.00%" 
         }).save();
-        
-        console.log(`✅ New Holding Created: ${qty} shares`);
       }
     } 
-    
-    // ==================== SELL LOGIC ====================
     else if (mode === "SELL") {
-      console.log("📉 SELL Order - Decreasing Holdings");
-      
+      // --- SELL ---
       let existingHolding = await HoldingsModel.findOne({ name });
 
-      // Check if holdings exist
-      if (!existingHolding) {
-        console.log(`❌ No holdings found for ${name}`);
-        return res.status(400).json({ 
-          error: `You don't own any shares of ${name}!` 
-        });
+      // Check: Share hai bhi ya nahi?
+      if (!existingHolding || Number(existingHolding.qty) < qty) {
+        return res.status(400).json({ error: "Insufficient holdings to sell!" });
       }
 
       let currentQty = Number(existingHolding.qty);
-      
-      console.log(`Current Holdings: ${currentQty} shares`);
-      console.log(`Trying to sell: ${qty} shares`);
-      
-      // Check if sufficient shares
-      if (currentQty < qty) {
-        console.log(`❌ Insufficient shares!`);
-        return res.status(400).json({ 
-          error: `Insufficient shares! You have ${currentQty} but trying to sell ${qty}` 
-        });
-      }
+      let newQty = currentQty - qty;
 
-      let newQty = currentQty - qty; // ✅ MINUS for SELL (यही सही है!)
-
-      console.log(`New Quantity: ${currentQty} - ${qty} = ${newQty}`);
-
-      if (newQty === 0) {
+      if (newQty <= 0) {
+        // Agar 0 ya usse kam bacha, toh delete kar do
         await HoldingsModel.deleteOne({ name });
-        console.log(`✅ All shares sold - Holding deleted`);
+        console.log(`✅ Holdings for ${name} removed (Qty is 0)`);
       } else {
-        await HoldingsModel.updateOne(
-          { name }, 
-          { 
-            qty: newQty,  // ✅ Reduced quantity
-            price: price.toFixed(2)
-          }
-        );
-        console.log(`✅ Holdings Updated: ${currentQty} → ${newQty} (DECREASED by ${qty})`);
+        await HoldingsModel.updateOne({ name }, { qty: newQty });
+        console.log(`✅ Holdings updated: ${newQty} remaining`);
       }
     }
 
-    // ==================== POSITIONS UPDATE ====================
-    console.log(`\n📊 Updating Positions Table`);
-    
+    // ==================== POSITIONS LOGIC (Main Fix Here) ====================
+    // Dhyan de: Hamein Name aur Product (CNC/MIS) dono match karne hain
     let existingPos = await PositionsModel.findOne({ name, product });
     
-    // For positions: BUY adds positive, SELL adds negative
+    // BUY hai toh +qty, SELL hai toh -qty
     let qtyChange = (mode === "BUY") ? qty : -qty;
-    
-    console.log(`Position Quantity Change: ${qtyChange}`);
 
     if (existingPos) {
+      // Agar position pehle se hai (Buy kiya tha, ab Sell kar rahe hain)
       let currentPosQty = Number(existingPos.qty);
-      let newPosQty = currentPosQty + qtyChange; // This works because qtyChange is already +/-
+      let newPosQty = currentPosQty + qtyChange;
       
-      console.log(`Current Position: ${currentPosQty}`);
-      console.log(`New Position: ${currentPosQty} + (${qtyChange}) = ${newPosQty}`);
-      
+      console.log(`Positions Update: ${currentPosQty} + (${qtyChange}) = ${newPosQty}`);
+
       if (newPosQty === 0) {
+        // --- FIX: Agar quantity 0 ho gayi, toh delete karo ---
         await PositionsModel.deleteOne({ name, product });
-        console.log(`✅ Position Closed`);
+        console.log(`✅ Position closed and removed for ${name}`);
       } else {
-        let updateData = { 
-          qty: newPosQty, 
-          price: price.toFixed(2) 
-        };
-        
-        // Update weighted average only for BUY
-        if (mode === "BUY" && currentPosQty > 0) {
-          let oldPosAvg = Number(existingPos.avg);
-          let newPosAvg = ((currentPosQty * oldPosAvg) + (qty * price)) / newPosQty;
-          updateData.avg = newPosAvg.toFixed(2);
-        }
-        
-        await PositionsModel.updateOne({ name, product }, updateData);
-        console.log(`✅ Position Updated: ${currentPosQty} → ${newPosQty}`);
+        // Agar 0 nahi hui (matlab partial sell kiya, ya short sell kiya)
+        // Average tabhi update karte hain jab position badh rahi ho (optionally)
+        // Simple rakhne ke liye hum sirf qty aur price update kar rahe hain
+        await PositionsModel.updateOne(
+          { name, product }, 
+          { qty: newPosQty, price: price }
+        );
       }
     } else {
+      // Agar Position exist nahi karti
+      // Case 1: Pehli baar BUY kar rahe hain -> Create New
+      // Case 2: Direct SELL kar rahe hain (Short Selling) -> Create New (-Qty)
+      
       await new PositionsModel({
         product, 
         name, 
-        qty: qtyChange,  // Will be negative if SELL
+        qty: qtyChange, // BUY hoga toh positive, SELL hoga toh negative
         avg: price.toFixed(2), 
-        price: price.toFixed(2), 
+        price, 
         net: "+0.00%", 
         day: "+0.00%", 
         isLoss: false
       }).save();
-      
-      console.log(`✅ New Position Created: ${qtyChange}`);
+      console.log(`✅ New Position created for ${name}: ${qtyChange}`);
     }
 
-    console.log(`\n✅ Order Processed Successfully!\n`);
-
-    res.status(200).json({ 
-      message: `${mode} order processed successfully!`,
-      order: { name, qty, price, mode, product }
-    });
+    res.status(200).json({ message: "Order processed successfully!" });
 
   } catch (err) {
-    console.error("❌ Backend Error:", err.message);
-    res.status(500).json({ 
-      error: "Internal Server Error", 
-      details: err.message 
-    });
+    console.error("❌ Error:", err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
