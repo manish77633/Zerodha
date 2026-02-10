@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import axios from "axios";
 import GeneralContext from "./Context";
 import WatchList from "./WatchList";
@@ -14,8 +14,11 @@ function Dashboard() {
   const [positions, setPositions] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const { refreshTrigger } = useContext(GeneralContext);
+  const location = useLocation();
+
+  // Check if we're on the main dashboard route (/)
+  const isMainDashboard = location.pathname === '/';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,7 +29,6 @@ function Dashboard() {
           axios.get("https://zerodha-u5jq.onrender.com/allPositions"),
           axios.get("https://zerodha-u5jq.onrender.com/allOrders")
         ]);
-
         setHoldings(holdingsRes.data);
         setPositions(positionsRes.data);
         setOrders(ordersRes.data);
@@ -41,14 +43,31 @@ function Dashboard() {
   }, [refreshTrigger]); // Jab bhi BuyWindow se trigger aayega, ye chalega
 
   return (
-    <div className="flex flex-col lg:flex-row mt-14 overflow-hidden h-screen">
-      <div className="w-full lg:w-112.5 shrink-0 border-b lg:border-b-0 lg:border-r border-gray-100 overflow-y-auto max-h-[50vh] lg:max-h-full">
+    <div className="flex flex-col lg:flex-row overflow-hidden h-[calc(100vh-56px)]">
+      
+      {/* WatchList - Desktop: Always visible | Mobile: Only on main dashboard */}
+      <div className={`
+        w-full lg:w-112.5 shrink-0 
+        border-b lg:border-b-0 lg:border-r border-gray-100 
+        overflow-y-auto 
+        ${isMainDashboard ? 'block' : 'hidden lg:block'}
+        lg:max-h-full max-h-full
+      `}>
         <WatchList />
       </div>
 
-      <main className="flex-1 overflow-y-auto bg-white p-4 md:p-8">
+      {/* Main Content - Desktop: Always visible | Mobile: Hidden on main dashboard */}
+      <main className={`
+        flex-1 overflow-y-auto bg-white p-4 md:p-8
+        ${isMainDashboard ? 'hidden lg:block' : 'block'}
+      `}>
         {loading ? (
-          <div className="flex items-center justify-center h-full">Loading...</div>
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+              <p className="text-gray-500">Loading...</p>
+            </div>
+          </div>
         ) : (
           <Routes>
             <Route index element={<Summary />} />
